@@ -26,7 +26,6 @@ const (
 
 type URI string
 
-// SUPPORTED_METHODS
 var SUPPORTED_METHODS = []string{"GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS", "PATCH"}
 var SUPPORTED_PROTOCOLS = []string{"HTTP/1.1"}
 
@@ -47,12 +46,11 @@ type Response struct {
 }
 
 func HandleConn(conn net.Conn) {
-	// TODO: Establish deadline for reading/writing
 	defer conn.Close()
 
+	// Reading the request
 	conn.SetReadDeadline(time.Now().Add(READ_TIMEOUT))
 
-	// Reading the request
 	request, err := handle_conn_read(conn)
 	if err != nil {
 		fmt.Println(err)
@@ -60,9 +58,9 @@ func HandleConn(conn net.Conn) {
 	}
 	fmt.Println("RECIEVED" + COLON + LF + request.stringify())
 
+	// Writing the response
 	conn.SetWriteDeadline(time.Now().Add(WRITE_TIMEOUT))
 
-	// Writing the response
 	response, err := handle_conn_write(conn, request)
 	if err != nil {
 		fmt.Println(err)
@@ -107,7 +105,6 @@ func handle_conn_read(conn net.Conn) (Request, error) {
 	if !slices.Contains(SUPPORTED_PROTOCOLS, request_protocol) {
 		return Request{}, fmt.Errorf("Invalid request protocol: %s", request_protocol)
 	}
-	// Check if URI is valid
 	if !slices.Contains(SUPPORTED_METHODS, request_method) {
 		return Request{}, fmt.Errorf("Invalid request method: %s", request_method)
 	}
