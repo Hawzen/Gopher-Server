@@ -99,7 +99,7 @@ func handle_conn_read(conn net.Conn) (Request, error) {
 		return Request{}, fmt.Errorf("Invalid request line: %s", request_line)
 	}
 	request_method := preprocess_http_text(request_line_tokens[0])
-	request_uri := preprocess_http_text(request_line_tokens[1])
+	request_uri := strings.TrimSpace(request_line_tokens[1])
 	request_protocol := preprocess_http_text(request_line_tokens[2])
 
 	if !slices.Contains(SUPPORTED_PROTOCOLS, request_protocol) {
