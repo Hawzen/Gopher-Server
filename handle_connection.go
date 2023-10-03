@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"strings"
+	"time"
 
 	"golang.org/x/exp/slices"
 )
@@ -19,6 +20,8 @@ const (
 	CR_BYTES      = byte('\r')
 	LF_BYTES      = byte('\n')
 	PROTOCOL_USED = "HTTP/1.1"
+	READ_TIMEOUT  = 15 * time.Second
+	WRITE_TIMEOUT = 15 * time.Second
 )
 
 type URI string
@@ -47,6 +50,8 @@ func HandleConn(conn net.Conn) {
 	// TODO: Establish deadline for reading/writing
 	defer conn.Close()
 
+	conn.SetReadDeadline(time.Now().Add(READ_TIMEOUT))
+
 	// Reading the request
 	request, err := handle_conn_read(conn)
 	if err != nil {
@@ -54,6 +59,8 @@ func HandleConn(conn net.Conn) {
 		return
 	}
 	fmt.Println("RECIEVED" + COLON + LF + request.stringify())
+
+	conn.SetWriteDeadline(time.Now().Add(WRITE_TIMEOUT))
 
 	// Writing the response
 	response, err := handle_conn_write(conn, request)
@@ -115,8 +122,6 @@ func handle_conn_read(conn net.Conn) (Request, error) {
 		}
 		header_line_tokens := strings.Split(header_line, COLON)
 		if len(header_line_tokens) < 2 {
-			// Print hex of header_line
-			fmt.Printf("%x\n", header_line)
 			return Request{}, fmt.Errorf("Invalid header line: %s, %d", header_line, len(header_line_tokens))
 		}
 		request_headers[header_line_tokens[0]] = strings.Join(header_line_tokens[1:], COLON)
@@ -216,5 +221,6 @@ func fill_boring_response_fields(response *Response) {
 	}
 	response.headers["Content-Type"] = "text/plain; charset=utf-8"
 	response.headers["Content-Length"] = fmt.Sprintf("%d", len(response.body))
+	response.headers["Connection"] = "close"
 	response.protocol = PROTOCOL_USED
 }
