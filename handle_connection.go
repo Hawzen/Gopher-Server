@@ -216,7 +216,9 @@ func fill_boring_response_fields(response *Response) {
 	if response.headers == nil {
 		response.headers = make(map[string]string)
 	}
-	response.headers["Content-Type"] = "text/plain; charset=utf-8"
+	if _, ok := response.headers["Content-Type"]; !ok {
+		response.headers["Content-Type"] = "text/plain; charset=utf-8"
+	}
 	response.headers["Content-Length"] = fmt.Sprintf("%d", len(response.body))
 	response.headers["Connection"] = "close"
 	response.protocol = PROTOCOL_USED
